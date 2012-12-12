@@ -26,7 +26,7 @@ class GroupView(object):
             return HTTPNotFound()
         return dict(group.items())
     
-    @view_config(route_name='group_search')
+    @view_config(route_name='group_search', renderer='json')
     def search(self):
         pass
 
@@ -110,6 +110,16 @@ class UserView(object):
         pass
         
 
+
+@view_config(route_name='login')
+def login_view(request):
+
+    username = request.POST['username']
+    password = request.POST['password']
+
+    
+    
+    pass
 
 def users_view(context, request):
     return {}
