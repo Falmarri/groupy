@@ -2,6 +2,7 @@ from pyramid.config import Configurator
 from pyramid.renderers import JSON
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid_beaker import session_factory_from_settings
+import models
 import logging
 import os
 
@@ -10,45 +11,7 @@ log = logging.getLogger(__name__)
 
 
 
-def _memoize(obj):
-    import functools
-    _cache = obj.cache = {}
-    @functools.wraps(obj)
-    def memoizer(location):
-        location = os.path.abspath(location)
-        if location not in _cache:
-            _cache[location] = obj(location)
-            return _cache[location]
-        return memoizer
-    
-    
 
-def get_graphdb(location):
-    import atexit
-    from neo4j import GraphDatabase
-    location = os.path.abspath(location)
-    _db = GraphDatabase(location)
-    atexit.register(lambda d: d.shutdown(), _db)
-    return _db
-
-class Resource(object):
-    _db = None
-    def __init__(self, request):
-        if Resource._db is None:
-            log.debug("Creating database object from %s", request.registry.settings['neo4j_location'])
-            Resource._db = get_graphdb(request.registry.settings['neo4j_location'])
-        self.db = Resource._db
-
-class Group(Resource):
-
-
-    def __getitem__(self, group):
-        raise KeyError()
-
-class User(Resource):
-    
-    def __getitem__(self, user):
-        raise KeyError()
 
 
 def group_root_factory(request):
@@ -77,30 +40,30 @@ def main(global_config, **settings):
     my_session_factory = session_factory_from_settings(settings)
 
     
-    config = Configurator(settings=settings, root_factory=Resource, session_factory=my_session_factory)
+    config = Configurator(settings=settings, root_factory=models.Resource, session_factory=my_session_factory)
     
     from pyramid.authentication import SessionAuthenticationPolicy
     from pyramid.authorization import ACLAuthorizationPolicy
     
-    config.set_authentication_policy(SessionAuthenticationPolicy(callback=groupfinder))
-    config.set_authorization_policy(ACLAuthorizationPolicy())
+    #config.set_authentication_policy(SessionAuthenticationPolicy(callback=groupfinder))
+    #config.set_authorization_policy(ACLAuthorizationPolicy())
 
-    config.ldap_setup(
-        'ldap://ldap.iplantcollaborative.org',
-    )
+    #config.ldap_setup(
+        #'ldap://ldap.iplantcollaborative.org',
+    #)
 
-    config.ldap_set_login_query(
-        base_dn='CN=people,DC=iplantcollaborative,DC=org',
-        filter_tmpl='(uid=%(login)s)',
-        scope = ldap.SCOPE_ONELEVEL,
-    )
+    #config.ldap_set_login_query(
+        #base_dn='CN=people,DC=iplantcollaborative,DC=org',
+        #filter_tmpl='(uid=%(login)s)',
+        #scope = ldap.SCOPE_ONELEVEL,
+    #)
 
-    config.ldap_set_groups_query(
-    base_dn='CN=people,DC=iplantcollaborative,DC=org',
-        filter_tmpl='(&(objectCategory=group)(member=%(userdn)s))',
-        scope = ldap.SCOPE_SUBTREE,
-        cache_period = 600,
-    )
+    #config.ldap_set_groups_query(
+    #base_dn='CN=people,DC=iplantcollaborative,DC=org',
+        #filter_tmpl='(&(objectCategory=group)(member=%(userdn)s))',
+        #scope = ldap.SCOPE_SUBTREE,
+        #cache_period = 600,
+    #)
     
     
     config.add_static_view('static', 'static', cache_max_age=3600)

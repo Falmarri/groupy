@@ -40,6 +40,14 @@ class GroupView(object):
 
         return users
 
+
+    @view_config(route_name='groups', renderer='json')
+    def groups(self):
+        hits = self.groups_idx.query('groupname:*')
+        r = [dict(u.items()) for u in hits]
+        hits.close()
+        return r
+
     def add_member(self):
         pass
 
@@ -110,16 +118,6 @@ class UserView(object):
         pass
         
 
-
-@view_config(route_name='login')
-def login_view(request):
-
-    username = request.POST['username']
-    password = request.POST['password']
-
-    
-    
-    pass
 
 def users_view(context, request):
     return {}

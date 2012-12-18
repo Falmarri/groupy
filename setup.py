@@ -12,6 +12,7 @@ requires = [
     'waitress',
     'neo4j-embedded',
     'python-ldap'
+    'pyramid_beaker'
     ]
 
 setup(name='groupy',
