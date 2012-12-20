@@ -47,8 +47,15 @@ class Group(Resource):
         except Exception as e:
             raise KeyError(key)
 
-    def members(self):
-        self.group.MEMBER_OF.incoming
+
+    def get_member(self, member, on_fail=None):
+        for r in self.group.MEMBER_OF.incoming:
+            if r.start['username'] == member or r.start['groupname'] == 'member':
+                return r
+
+
+    def members(self, direct=True):
+        membership_nodes = [(rel, rel.start) for rel in self.group.MEMBER_OF.incoming]
 
 
     def roles(self):
@@ -71,7 +78,7 @@ class User(Resource):
             pass
 
     def memberships(self):
-        pass
+        membership_nodes = [(rel, rel.end) for rel in self.group.MEMBER_OF.outgoing]
 
 
 class Membership(Resource):

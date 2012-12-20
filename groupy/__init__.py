@@ -33,6 +33,8 @@ from pyramid.security import (
     forget,
 )
 
+
+
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
@@ -69,7 +71,7 @@ def main(global_config, **settings):
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_route('home', '/')
     
-    config.add_route('user_search', '/users/search')
+    config.add_route('user_search', '/users/search' )
     config.add_route('user', '/users/{user}')
     config.add_route('users', '/users/')
     config.add_route('user_memberships', '/users/{user}/memberships')

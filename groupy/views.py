@@ -85,7 +85,7 @@ class UserView(object):
         if q:
             hits = self.users_idx.query(q)
 
-            r = [dict(u.items()) for u in hits]
+            r = [{k: v for k, v in u.items() if k in ('username', 'cn', 'mail')} for u in hits]
 
             hits.close()
 
