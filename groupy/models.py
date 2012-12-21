@@ -12,6 +12,16 @@ def get_graphdb(location):
     atexit.register(lambda d: d.shutdown(), _db)
     return _db
 
+
+class IUser(Interface):
+    pass
+class IGroup(Interface):
+    pass
+class IUsers(Interface):
+    pass
+class IGroups(Interface):
+    pass
+
 class IResource(Interface):
 
     def __getitem__(item):
@@ -32,26 +42,34 @@ class Resource(object):
 @implementer(IResource)
 class Group(Resource):
 
-    def __init__(self, request, group):
+    def __init__(self, request, group=None, parent=None):
         self.group = group
+        self.__name__ = group['groupname'] if group else ''
+        self.__parent__ = parent
 
     def __getitem__(self, key):
         if key == 'members':
-            pass
+            return self.members()
         elif key == 'roles':
             pass
         elif key == 'filter':
             pass
         try:
-            return getattr(self, key)()
+            return self.get_member(key)
+        except KeyError as e:
+            raise
         except Exception as e:
+            logging.exception("Could not look up path %s", key)
             raise KeyError(key)
 
 
     def get_member(self, member, on_fail=None):
         for r in self.group.MEMBER_OF.incoming:
-            if r.start['username'] == member or r.start['groupname'] == 'member':
-                return r
+            if r.start['username'] == member:
+                return User(self.request, r, self)
+            elif r.start['groupname'] == member:
+                return Group(self.request, r, self)
+        raise KeyError(member)
 
 
     def members(self, direct=True):
@@ -70,8 +88,10 @@ class Group(Resource):
 @implementer(IResource)
 class User(Resource):
 
-    def __init__(self, request, user):
+    def __init__(self, request, user=None, parent=None):
         self.user = user
+        self.__name__ = user['username'] if user else ''
+        self.__parent__ = parent
 
     def __getitem__(self, key):
         if key == 'memberships':
@@ -81,17 +101,16 @@ class User(Resource):
         membership_nodes = [(rel, rel.end) for rel in self.group.MEMBER_OF.outgoing]
 
 
-class Membership(Resource):
+class Membership(object):
 
-    def __init__(self, request, user):
+    def __init__(self, request, user, group):
         self.user = user
-
-    def __getitem__(self, key):
-        if key == 'memberships':
-            pass
+        self.group = group
 
 
-        
+
+
+
 
 @implementer(IResource)
 class Users(object):

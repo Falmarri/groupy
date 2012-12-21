@@ -3,6 +3,7 @@ from pyramid.httpexceptions import HTTPNotFound
 import json
 import logging
 import os
+import models
 
 log = logging.getLogger(__name__)
 
@@ -10,6 +11,15 @@ log = logging.getLogger(__name__)
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
 def my_view(request):
     return {'project':'groupy'}
+
+
+
+@view_config(renderer='json')
+def group(context, request):
+    pass
+
+
+
 
 
 @view_config(route_name='group', renderer='json')

@@ -15,10 +15,10 @@ log = logging.getLogger(__name__)
 
 
 def group_root_factory(request):
-    return {}
+    return models.Groups(request)
 
 def user_root_factory(request):
-    return {}
+    return models.Users(request)
 
 
 from pyramid_ldap import (
@@ -72,15 +72,13 @@ def main(global_config, **settings):
     config.add_route('home', '/')
     
     config.add_route('user_search', '/users/search' )
-    config.add_route('user', '/users/{user}')
-    config.add_route('users', '/users/')
-    config.add_route('user_memberships', '/users/{user}/memberships')
+    config.add_route('users', '/users/*traverse', factory=user_root_factory)
+    #config.add_route('user_memberships', '/users/{user}/memberships')
 
     
     config.add_route('group_search', '/groups/search')
-    config.add_route('group', '/groups/{group}')
-    config.add_route('groups', '/groups/')
-    config.add_route('group_members', '/groups/{group}/members')
+    config.add_route('groups', '/groups/*traverse', factory=group_root_factory)
+    #config.add_route('group_members', '/groups/{group}/members')
 
 
 
