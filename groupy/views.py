@@ -14,6 +14,22 @@ def my_view(request):
 
 
 
+@view_config(route_name='cypher', request_method='POST', renderer='json')
+def cypher_post(context, request):
+    query = request.params['query']
+    db = context.db
+    result = db.query(query)
+    columns = result.keys()
+
+    for row in result:
+        for c in columns:
+            row[c]
+
+@view_config(route_name='cypher', request_method='GET')
+def cypher_get(request):
+    pass
+
+
 @view_config(renderer='json')
 def group(context, request):
     pass
