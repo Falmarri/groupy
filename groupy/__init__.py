@@ -10,7 +10,21 @@ log = logging.getLogger(__name__)
 
 
 
+def get_graphdb(location):
+    import atexit
+    from neo4j import GraphDatabase
+    location = os.path.abspath(location)
+    _db = GraphDatabase(location)
+    atexit.register(lambda d: d.shutdown(), _db)
+    return _db
 
+class Resource(object):
+    _db = None
+    def __init__(self, request):
+        if Resource._db is None:
+            logging.debug("Creating database object from %s", request.registry.settings['neo4j_location'])
+            Resource._db = get_graphdb(request.registry.settings['neo4j_location'])
+        self.db = Resource._db
 
 
 
