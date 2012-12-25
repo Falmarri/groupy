@@ -31,6 +31,80 @@ class IResourceList(Interface):
         pass
 
 
+
+class Resource(object):
+
+    __name__ = ''
+    __parent__ = None
+
+
+class NodeResource(Resource):
+    pass
+
+class RelationResource(Resource):
+    pass
+
+
+
+class Node(object):
+    
+    def __init__(self, node):
+        self._node = node
+        self._id = None
+        self._type = None # dynamic node types? (group, user, resource?, file, application, *)
+        self._type = 'group' if self._node['groupname'] else 'user' if self._node['username'] else None
+
+    def __getattr__(self, attr):
+        getattr(self._node, attr)
+
+    def __repr__(self):
+        return (self.uri, dict(self._node.items()))
+
+
+class _NodeWrapper(object):
+    
+    def __init__(self, node):
+        self._node = node
+        self._type = None # dynamic node types? (group, user, resource?, file, application, *)
+        self._type = 'group' if self._node['groupname'] else 'user' if self._node['username'] else None
+
+    def __getattr__(self, attr):
+        getattr(self._node, attr)
+
+    def __repr__(self):
+        return (self.uri, dict(self._node.items()))
+
+
+class GroupNode(_NodeWrapper):
+
+    def members(self):
+        return [GroupRelation(rel) for rel in self._node.MEMBER_OF.incoming]
+
+class UserNode(_NodeWrapper):
+
+    def memberships(self, _filter=None):
+        return [GroupRelation(rel) for rel in self._node.MEMBER_OF.outgoing]
+
+
+
+class GroupRelation(_NodeWrapper):
+
+    @property
+    def user(self):
+        return self._node.start
+
+    @property
+    def group(self):
+        return sel._node.end
+
+    def __repr__(self):
+        return {'membership' : (self._node.type, dict(self._node.items())),
+                'user'       : repr(self.user),
+                'group'      : repr(self.group),
+                }
+
+
+
 class Resource(object):
     _db = None
     def __init__(self, request):

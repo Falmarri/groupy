@@ -30,10 +30,32 @@ def cypher_get(request):
     pass
 
 
-@view_config(renderer='json')
-def group(context, request):
+@view_config(context='groupy.models.GroupNode')
+def group_details(context, request):
     pass
 
+def group_list(context, request):
+    pass
+
+@view_config(context='groupy.models.GroupRelation')
+def membership_details(context, request):
+    group = context.group
+    user = context.user
+
+    ret = {}
+    ret['user'] = ('/users/' + user['username'], repr(user))
+    ret['group'] = ('/groups/' + group['groupname'], repr(group))
+
+def group_members_list(context, request):
+    pass
+
+@view_config(context='groupy.models.UserNode')
+def user_details(context, request):
+    pass
+
+
+def user_list(context, request):
+    pass
 
 
 
