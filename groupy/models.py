@@ -31,19 +31,64 @@ class IResourceList(Interface):
         pass
 
 
-
 class Resource(object):
 
     __name__ = ''
     __parent__ = None
 
+    def __init__(self, request):
+        self.db = get_graphdb(request.registry.settings['neo4j_location'])
+        self.request = request
+
+
+
+class Root(Resource,dict):
+
+    def __init__(self, request):
+        #super(Root, self).__init__(self)
+        #self.db = get_graphdb(request.registry.settings['neo4j_location'])
+        #self.request = request
+        Resource.__init__(self, request)
+        dict.__init__(self)
+        self['users'] =  Users()
+        self['groups'] = Groups()
+
+
+class Users(Resource):
+
+    _key = 'username'
+
+    def __init__(self, request):
+        Resource.__init__(self, request)
+        self.idx = self.db.node.indexes.get('people')
+
+    def __getitem__(self, key):
+        pass
+
+class Groups(Resource):
+
+    _key = 'groupname'
+
+    def __init__(self, request):
+        Resource.__init__(self, request)
+        self.idx = self.db.node.indexes.get('groups')
+
+    def __getitem__(self, key):
+        pass
+
+
+
 
 class NodeResource(Resource):
     pass
 
+
 class RelationResource(Resource):
     pass
 
+
+class NodeList(Resource, dict)
+    pass
 
 
 class Node(object):
@@ -61,33 +106,24 @@ class Node(object):
         return (self.uri, dict(self._node.items()))
 
 
-class _NodeWrapper(object):
-    
-    def __init__(self, node):
-        self._node = node
-        self._type = None # dynamic node types? (group, user, resource?, file, application, *)
-        self._type = 'group' if self._node['groupname'] else 'user' if self._node['username'] else None
-
-    def __getattr__(self, attr):
-        getattr(self._node, attr)
-
-    def __repr__(self):
-        return (self.uri, dict(self._node.items()))
-
-
-class GroupNode(_NodeWrapper):
+class GroupNode(Node):
 
     def members(self):
         return [GroupRelation(rel) for rel in self._node.MEMBER_OF.incoming]
 
-class UserNode(_NodeWrapper):
+    def __getitem__(self, key):
+        for n in self._node.MEMBER_OF.incoming:
+            if n.start
+
+class UserNode(Node):
 
     def memberships(self, _filter=None):
         return [GroupRelation(rel) for rel in self._node.MEMBER_OF.outgoing]
 
+    def __getitem__(self, key):
+        pass
 
-
-class GroupRelation(_NodeWrapper):
+class GroupRelation(Node):
 
     @property
     def user(self):
