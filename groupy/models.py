@@ -3,6 +3,7 @@ from zope.interface import Interface
 import logging
 import os
 
+log = logging.getLogger(__name__)
 
 def get_graphdb(location):
     import atexit
@@ -22,23 +23,16 @@ class IUsers(Interface):
 class IGroups(Interface):
     pass
 
-class IResource(Interface):
-
-    def __getitem__(item):
-        pass
-
-class IResourceList(Interface):
-        pass
-
 
 class Resource(object):
-
-    __name__ = ''
-    __parent__ = None
-
+    
+    _db = None
     def __init__(self, request):
-        self.db = get_graphdb(request.registry.settings['neo4j_location'])
-        self.request = request
+        # NOT THREAD SAFE. IF RUNNING ON PYPY SHOULD PROBABLY CEHCK NEO4J
+        if Resource._db is None:
+            Resource._db = get_graphdb(request.registry.settings['neo4j_location'])
+        object.__setattr__(self, 'db', Resource._db)
+        object.__setattr__(self, 'request', request)
 
 
 
@@ -50,10 +44,11 @@ class Root(Resource,dict):
         #self.request = request
         Resource.__init__(self, request)
         dict.__init__(self)
-        self['users'] =  Users()
-        self['groups'] = Groups()
+        self['users'] =  Users(request)
+        self['groups'] = Groups(request)
+        
 
-
+@implementer(IUsers)
 class Users(Resource):
 
     _key = 'username'
@@ -63,8 +58,13 @@ class Users(Resource):
         self.idx = self.db.node.indexes.get('people')
 
     def __getitem__(self, key):
-        pass
+        user = self.idx.query('{0}:{1}'.format(Users._key, key)).single
+        if user:
+            return User(self.request, user, self, key.lower())
 
+        raise KeyError(key)
+    
+@implementer(IGroups)
 class Groups(Resource):
 
     _key = 'groupname'
@@ -74,161 +74,61 @@ class Groups(Resource):
         self.idx = self.db.node.indexes.get('groups')
 
     def __getitem__(self, key):
-        pass
+        group = self.idx.query('{0}:{1}'.format(Groups._key, key)).single
+        if group:
+            return Group(self.request, group, self, key.lower())
+        logging.warning("Could not find group %s. %s", key, group)
+        raise KeyError(key)
 
 
 
 
-class NodeResource(Resource):
-    pass
-
-
-class RelationResource(Resource):
-    pass
-
-
-class NodeList(Resource, dict)
-    pass
-
-
-class Node(object):
+class Node(Resource):
     
-    def __init__(self, node):
-        self._node = node
-        self._id = None
-        self._type = None # dynamic node types? (group, user, resource?, file, application, *)
-        self._type = 'group' if self._node['groupname'] else 'user' if self._node['username'] else None
+    def __init__(self, request, node, parent=None, name=''):
+        Resource.__setattr__(self, 'node', node)
+        Resource.__setattr__(self, 'request', request)
+        Resource.__setattr__(self, '__parent__', parent)
+        Resource.__setattr__(self, '__name__', name)
+        Resource.__init__(self, request)
 
-    def __getattr__(self, attr):
-        getattr(self._node, attr)
+    def __getattr__(self, key):
+        return getattr(self.node, key)
 
-    def __repr__(self):
-        return (self.uri, dict(self._node.items()))
+    def __setattr__(self, key, value):
+        if key in self.__dict__:
+            return Resource.__setattr__(self, key, value)
+        else:
+            ret = setattr(self.node, key, value)
+            return ret
 
-
-class GroupNode(Node):
-
-    def members(self):
-        return [GroupRelation(rel) for rel in self._node.MEMBER_OF.incoming]
-
-    def __getitem__(self, key):
-        for n in self._node.MEMBER_OF.incoming:
-            if n.start
-
-class UserNode(Node):
-
-    def memberships(self, _filter=None):
-        return [GroupRelation(rel) for rel in self._node.MEMBER_OF.outgoing]
-
-    def __getitem__(self, key):
-        pass
-
-class GroupRelation(Node):
-
-    @property
-    def user(self):
-        return self._node.start
-
-    @property
-    def group(self):
-        return sel._node.end
-
-    def __repr__(self):
-        return {'membership' : (self._node.type, dict(self._node.items())),
-                'user'       : repr(self.user),
-                'group'      : repr(self.group),
-                }
+@implementer(IUser)
+class User(Node):
+    pass
 
 
+class LdapSource(object):
 
-class Resource(object):
-    _db = None
     def __init__(self, request):
-        if Resource._db is None:
-            logging.debug("Creating database object from %s", request.registry.settings['neo4j_location'])
-            Resource._db = get_graphdb(request.registry.settings['neo4j_location'])
-        self.db = Resource._db
+        pass
 
-@implementer(IResource)
-class Group(Resource):
+@implementer(IUser)
+class LdapUser(User):
 
-    def __init__(self, request, group=None, parent=None):
-        self.group = group
-        self.__name__ = group['groupname'] if group else ''
-        self.__parent__ = parent
+    def __setattr__(self, key, value):
+        User.__setattr__(self, key, value)
+        
+
+
+
+@implementer(IGroup)
+class Group(Node):
 
     def __getitem__(self, key):
-        if key == 'members':
-            return self.members()
-        elif key == 'roles':
-            pass
-        elif key == 'filter':
-            pass
-        try:
-            return self.get_member(key)
-        except KeyError as e:
-            raise
-        except Exception as e:
-            logging.exception("Could not look up path %s", key)
+        for u in self.node.MEMBER_OF.incoming:
+            if u.start['username'] == key.lower():
+                return User(self.request, u.start, self, key.lower())
+        else:
             raise KeyError(key)
-
-
-    def get_member(self, member, on_fail=None):
-        for r in self.group.MEMBER_OF.incoming:
-            if r.start['username'] == member:
-                return User(self.request, r, self)
-            elif r.start['groupname'] == member:
-                return Group(self.request, r, self)
-        raise KeyError(member)
-
-
-    def members(self, direct=True):
-        membership_nodes = [(rel, rel.start) for rel in self.group.MEMBER_OF.incoming]
-
-
-    def roles(self):
-        pass
-
-
-
-    def filter(self):
-        pass
-
-    
-@implementer(IResource)
-class User(Resource):
-
-    def __init__(self, request, user=None, parent=None):
-        self.user = user
-        self.__name__ = user['username'] if user else ''
-        self.__parent__ = parent
-
-    def __getitem__(self, key):
-        if key == 'memberships':
-            pass
-
-    def memberships(self):
-        membership_nodes = [(rel, rel.end) for rel in self.group.MEMBER_OF.outgoing]
-
-
-class Membership(object):
-
-    def __init__(self, request, user, group):
-        self.user = user
-        self.group = group
-
-
-
-
-
-
-@implementer(IResource)
-class Users(object):
-    pass
-
-
-@implementer(IResource)
-class Groups(object):
-    pass
 
 

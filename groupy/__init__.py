@@ -42,7 +42,7 @@ def main(global_config, **settings):
     my_session_factory = session_factory_from_settings(settings)
 
     
-    config = Configurator(settings=settings, root_factory=models.Resource, session_factory=my_session_factory)
+    config = Configurator(settings=settings, root_factory=models.Root, session_factory=my_session_factory)
     
     from pyramid.authentication import SessionAuthenticationPolicy
     from pyramid.authorization import ACLAuthorizationPolicy
@@ -67,22 +67,29 @@ def main(global_config, **settings):
         #cache_period = 600,
     #)
     
-    
+
+
+    from ldappool import ConnectionManager
+    cm = ConnectionManager(settings['groupy.ldap_url'],
+                            bind=settings['groupy.ldap_user'] or None,
+                            passwd=settings['groupy.ldap_password'] or None)
+
+    config.add_request_method((lambda r: cm), name='ldap', property=True)
     config.add_static_view('static', 'static', cache_max_age=3600)
-    config.add_route('home', '/')
+    #config.add_route('home', '/')
     
-    config.add_route('user_search', '/users/search' )
-    config.add_route('users', '/users/*traverse', factory=user_root_factory)
-    #config.add_route('user_memberships', '/users/{user}/memberships')
+    #config.add_route('user_search', '/users/search' )
+    #config.add_route('users', '/users/*traverse', factory=user_root_factory)
+    ##config.add_route('user_memberships', '/users/{user}/memberships')
 
     
-    config.add_route('group_search', '/groups/search')
-    config.add_route('groups', '/groups/*traverse', factory=group_root_factory)
+    #config.add_route('group_search', '/groups/search')
+    #config.add_route('groups', '/groups/*traverse', factory=group_root_factory)
     #config.add_route('group_members', '/groups/{group}/members')
 
 
 
     
-    config.add_route('cypher', '/cypher')
+    #config.add_route('cypher', '/cypher')
     config.scan()
     return config.make_wsgi_app()

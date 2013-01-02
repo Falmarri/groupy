@@ -1,0 +1,12 @@
+
+START root = node:people({search_query}*) MATCH root -[r:{relationship}]-> g return root, r, g;
+
+# Group Admins
+#
+START group = node({id}) MATCH group <-[r:MEMBER_OF]- u WHERE r.role! = 'admin' return u;
+
+# Collaborators
+
+START user = node:people('username:{search}') match user -[r:COLLABORATOR]- other return user, r, other;
+
+# Followers

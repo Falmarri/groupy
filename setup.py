@@ -11,7 +11,8 @@ requires = [
     'pyramid_debugtoolbar',
     'waitress',
     'neo4j-embedded',
-    'python-ldap'
+    'python-ldap',
+    'ldappool',
     'pyramid_beaker'
     ]
 
