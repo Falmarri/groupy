@@ -8,13 +8,13 @@ import models
 log = logging.getLogger(__name__)
 
 
-@view_config(name='home', renderer='templates/mytemplate.pt')
-def my_view(request):
+@view_config(context=models.Root, renderer='templates/mytemplate.pt')
+def my_view(context, request):
     return {'project':'groupy'}
 
 
 
-@view_config(name='cypher', request_method='POST', renderer='json')
+@view_config(name='cypher', context=models.Root, request_method='POST', renderer='json')
 def cypher_post(context, request):
     query = request.params['query']
     db = context.db
@@ -25,83 +25,109 @@ def cypher_post(context, request):
         for c in columns:
             row[c]
 
-@view_config(name='cypher', request_method='GET')
-def cypher_get(request):
+@view_config(name='cypher', context=models.Root, request_method='GET')
+def cypher_get(context, request):
     pass
 
 
-@view_defaults(context=models.User, renderer='json')
-@view_config()
-class UserView(object):
 
+
+class BaseView(object):
     def __init__(self, context, request):
         self.context = context
         self.request = request
+        self.filter = None if not 'filter' in self.request.params or not self.request.params['filter'] else self.request.params['filter'].split(',')
+        self.search = None
+
+    def node_to_dict(self, node):
+        return {k: v for (k, v) in node.items() if not self.filter or k in self.filter}
+        
+
+class BaseMultiView(BaseView):
+    from profilehooks import profile
+    from string import Template
+    fastQuery = Template("""start n = node:${idx}({k}) return n""")
+    
+    def __init__(self, context, request):
+        BaseView.__init__(self, context, request)
+        self.search = None if 'search' not in self.request.params or not self.request.params['search'] else self.request.params['search']
+        if not self.search:
+            self._query = '{0}:*'.format(self.context._key)
+        elif ':' in self.search:
+            self._query = self.search
+        else:
+            self._query = ' '.join(map(lambda x: '{0}:{1}'.format(x, self.search), self.context._idxs))
+        log.debug("Group query: %s", self._query)
+
+    #@profile(filename='multi.prof', immediate=True)
+    def __call__(self):
+        
+        hits = self.context.db.query(BaseMultiView.fastQuery.substitute(idx=self.context._idx_name), k=self._query)['n']
+
+        return sorted([self.node_to_dict(ret) for ret in hits])
+    
+    def create(self):
+        pass
+
+class BaseSingleView(BaseView):
 
     def __call__(self):
-        return dict(self.context.items())
+        return self.node_to_dict(self.context)
+
+
+    def update(self):
+        content = self.request.json_body
+
+        with self.context.db.transaction as tx:
+            for k, v in content.items():
+                self.context[k] = v
+
+        return self.node_to_dict(self.context)
+    
+    def join_group(self):
+        ''' In subclass so groups can be subgroups'''
+        pass
+
+    def leave_group(self):
+        ''' In subclass so groups can be subgroups'''
+        pass
+
+@view_defaults(context=models.User, renderer='json')
+@view_config(request_method='GET')
+@view_config(request_method=('POST', 'PUT'), attr='update')
+class UserView(BaseSingleView):
 
     @view_config(name='groups')
     def groups(self):
         return sorted([(ret.end['groupname'], dict(ret.items())) for ret in self.context.MEMBER_OF.outgoing])
 
-    def collaborators(self):
-        pass
 
-    def delete(self):
-        pass
 
-    def join(self):
-        pass
-
-    def update(self):
-        pass
     
 @view_defaults(context=models.Group, renderer='json')
-@view_config()
-class GroupView(object):
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
-
-    def __call__(self):
-        return dict(self.context.items())
+@view_config(request_method='GET')
+@view_config(request_method=('POST', 'PUT'), attr='update')
+class GroupView(BaseSingleView):
 
     @view_config(name='members')
     def members(self):
         return sorted([(ret.start['username'], dict(ret.items())) for ret in self.context.MEMBER_OF.incoming])
 
-    def add(self):
+    def remove_user(self):
         pass
 
 @view_defaults(context=models.Users, renderer='json')
-@view_config()
-class UsersView(object):
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
-
-    def __call__(self):
-        pass
-
-    @view_config(name='search')
-    def search(self):
-        pass
+@view_config(request_method='GET')
+@view_config(request_method='POST', attr='create')
+class UsersView(BaseMultiView):
+    pass
 
 
 @view_defaults(context=models.Groups, renderer='json')
-@view_config()
-class GroupsView(object):
-    def __init__(self, context, request):
-        self.context = context
-        self.request = request
+@view_config(request_method='GET')
+@view_config(request_method='POST', attr='create')
+class GroupsView(BaseMultiView):
+    pass
 
-    def __call__(self):
-        pass
-
-    
-    @view_config(name='search')
-    def search(self):
-        pass
     
 

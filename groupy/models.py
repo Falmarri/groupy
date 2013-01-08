@@ -24,6 +24,8 @@ class IGroups(Interface):
     pass
 
 
+
+
 class Resource(object):
     
     _db = None
@@ -31,10 +33,13 @@ class Resource(object):
         # NOT THREAD SAFE. IF RUNNING ON PYPY SHOULD PROBABLY CEHCK NEO4J
         if Resource._db is None:
             Resource._db = get_graphdb(request.registry.settings['neo4j_location'])
-        object.__setattr__(self, 'db', Resource._db)
-        object.__setattr__(self, 'request', request)
+        self.db = Resource._db
+        self.request = request
 
 
+
+class Cypher(Resource):
+    pass
 
 class Root(Resource,dict):
 
@@ -47,18 +52,28 @@ class Root(Resource,dict):
         self['users'] =  Users(request)
         self['groups'] = Groups(request)
         
+        
 
 @implementer(IUsers)
 class Users(Resource):
-
+    _idx_name = 'people'
     _key = 'username'
+    _idxs = (_key, 'uid', 'cn', 'sn', 'givenname', 'mail', 'displayname')
 
     def __init__(self, request):
         Resource.__init__(self, request)
-        self.idx = self.db.node.indexes.get('people')
+        self.idx = self.db.node.indexes.get(self._idx_name)
+
+    def _query(self, *args, **kwargs):
+        hits = self.idx.query(' '.join(map(lambda x: '*:{0}'.format(x), args)))
+
+    def _get_user(self, username):
+        ''' `username` should be unique, so we can
+        just get it instead of having to query'''
+        pass
 
     def __getitem__(self, key):
-        user = self.idx.query('{0}:{1}'.format(Users._key, key)).single
+        user = self.idx.query('{0}:{1}'.format(Users._key, key.lower())).single
         if user:
             return User(self.request, user, self, key.lower())
 
@@ -66,15 +81,15 @@ class Users(Resource):
     
 @implementer(IGroups)
 class Groups(Resource):
-
+    _idx_name = 'groups'
     _key = 'groupname'
-
+    _idxs = (_key, 'cn', 'displayname',)
     def __init__(self, request):
         Resource.__init__(self, request)
-        self.idx = self.db.node.indexes.get('groups')
+        self.idx = self.db.node.indexes.get(self._idx_name)
 
     def __getitem__(self, key):
-        group = self.idx.query('{0}:{1}'.format(Groups._key, key)).single
+        group = self.idx.query('{0}:{1}'.format(Groups._key, key.lower())).single
         if group:
             return Group(self.request, group, self, key.lower())
         logging.warning("Could not find group %s. %s", key, group)
@@ -84,41 +99,49 @@ class Groups(Resource):
 
 
 class Node(Resource):
+
+    def __new__(self, request, node, parent=None, name=''):
+        if 'groupname' in node:
+            pass
+        elif 'username' in self.node:
+            pass
+
     
     def __init__(self, request, node, parent=None, name=''):
-        Resource.__setattr__(self, 'node', node)
-        Resource.__setattr__(self, 'request', request)
-        Resource.__setattr__(self, '__parent__', parent)
-        Resource.__setattr__(self, '__name__', name)
+        self.node = node
+        self.request = request
+        self.__parent__ = parent
+        self.__name = name
         Resource.__init__(self, request)
 
     def __getattr__(self, key):
         return getattr(self.node, key)
 
-    def __setattr__(self, key, value):
-        if key in self.__dict__:
-            return Resource.__setattr__(self, key, value)
-        else:
-            ret = setattr(self.node, key, value)
-            return ret
+    def __setitem__(self, key, value):
+        self.node[key] = value
 
 @implementer(IUser)
 class User(Node):
     pass
 
 
-class LdapSource(object):
-
-    def __init__(self, request):
-        pass
-
 @implementer(IUser)
-class LdapUser(User):
+class LdapNode(Node):
+    from ldap import modlist
+    import ldap
+    def push(self):
 
-    def __setattr__(self, key, value):
-        User.__setattr__(self, key, value)
-        
+        with self.cm as conn:
+            current_ldap = conn.search_s(self['dn'], ldap.SCOPE_BASE)
+            if current_ldap and len(current_ldap) == 1:
+                current_ldap = current_ldap[0][1]
+            else:
+                raise Exception('Error looking up user in ldap')
+            mods = modlist.modifyModlist(current_ldap, {k: list(v) for (k,v) in self.items()}, ['groupname', 'username', 'dn', 'uid'])
+            conn.modify_s(self['dn'], mods)
 
+    def pull(self):
+        pass
 
 
 @implementer(IGroup)
@@ -132,3 +155,9 @@ class Group(Node):
             raise KeyError(key)
 
 
+
+SCHEMA = {
+        'people' : Groups._idxs,
+        'groups' : Users._idxs
+
+    }
