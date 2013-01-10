@@ -31,6 +31,9 @@ def cypher_get(context, request):
 
 
 
+def init_db(context, request):
+    pass
+
 
 class BaseView(object):
     def __init__(self, context, request):
@@ -40,8 +43,14 @@ class BaseView(object):
         self.search = None
 
     def node_to_dict(self, node):
-        return {k: v for (k, v) in node.items() if not self.filter or k in self.filter}
-        
+        if self.filter:
+            k = {}
+            for f in self.filter:
+                k[f.lower()] = node[f.lower()]
+            return k
+        else:
+            return dict(node.items())
+     
 
 class BaseMultiView(BaseView):
     from profilehooks import profile
@@ -72,12 +81,13 @@ class BaseMultiView(BaseView):
 class BaseSingleView(BaseView):
 
     def __call__(self):
-        return self.node_to_dict(self.context)
+        return self.node_to_dict(self.context.node)
 
 
     def update(self):
         content = self.request.json_body
-
+        if 'dn' in content and content['dn'] != self.context.node['dn']:
+            raise Exception("Cannot update ldap DN")
         with self.context.db.transaction as tx:
             for k, v in content.items():
                 self.context[k] = v

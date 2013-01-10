@@ -32,7 +32,20 @@ class Resource(object):
     def __init__(self, request):
         # NOT THREAD SAFE. IF RUNNING ON PYPY SHOULD PROBABLY CEHCK NEO4J
         if Resource._db is None:
-            Resource._db = get_graphdb(request.registry.settings['neo4j_location'])
+            import os
+            if not os.environ['NEO4J_PYTHON_JVMARGS'] and request.registry.settings['neo4j.jvmargs']:
+                os.environ['NEO4J_PYTHON_JVMARGS'] = request.registry.settings['neo4j.jvmargs']
+
+            if not os.environ['JAVA_HOME'] and request.registry.settings['neo4j.java_home']:
+                os.environ['JAVA_HOME'] = request.registry.settings['neo4j.java_home']
+
+            if request.registry.settings['neo4j.properties']:
+                import jprops
+                with open(request.registry.settings['neo4j.properties']) as fp:
+                    conf = jprops.load_properties(fp)
+            
+                
+            Resource._db = get_graphdb(request.registry.settings['neo4j.location'])
         self.db = Resource._db
         self.request = request
 
@@ -97,15 +110,36 @@ class Groups(Resource):
 
 
 
+class NodeFactory(object):
 
-class Node(Resource):
-
-    def __new__(self, request, node, parent=None, name=''):
-        if 'groupname' in node:
-            pass
-        elif 'username' in self.node:
+    def __call__(self, request, node, parent=None, name=''):
+        if 'groupname' in node.keys():
             pass
 
+        elif 'username' in node.keys():
+            pass
+
+        if node['source'] == 'ldap':
+            pass
+        elif node['source'] == 'unknown':
+            pass
+            
+
+Node = NodeFactory()
+
+
+class _Node(Resource):
+
+    #def __new__(self, request, node, parent=None, name=''):
+        #if 'groupname' in node:
+            #pass
+        #elif 'username' in self.node:
+            #pass
+
+
+    def create(self, *args, **kwargs):
+        for k,v in kwargs.items():
+            self.node[k] = v
     
     def __init__(self, request, node, parent=None, name=''):
         self.node = node
@@ -121,14 +155,15 @@ class Node(Resource):
         self.node[key] = value
 
 @implementer(IUser)
-class User(Node):
+class User(_Node):
     pass
 
 
 @implementer(IUser)
-class LdapNode(Node):
+class LdapNode(_Node):
     from ldap import modlist
     import ldap
+ 
     def push(self):
 
         with self.cm as conn:
@@ -137,15 +172,28 @@ class LdapNode(Node):
                 current_ldap = current_ldap[0][1]
             else:
                 raise Exception('Error looking up user in ldap')
-            mods = modlist.modifyModlist(current_ldap, {k: list(v) for (k,v) in self.items()}, ['groupname', 'username', 'dn', 'uid'])
+            mods = modlist.modifyModlist(current_ldap, dict((k, list(v)) for k,v in self.items()), ['groupname', 'username', 'dn', 'uid'])
             conn.modify_s(self['dn'], mods)
 
     def pull(self):
-        pass
+        with self.cm as conn:
+            current_ldap = conn.search_s(self['dn'], ldap.SCOPE_BASE)
+            if current_ldap and len(current_ldap) == 1:
+                current_ldap = current_ldap[0][1]
+            else:
+                raise Exception('Error looking up user in ldap')
 
+            for attr, val in current_ldap.items():
+                try:
+                    if len(val) != 1:
+                        self[attr] = [unicode(v, 'utf-8') for v in val]
+                    else:
+                        self[attr] = unicode(val[0], 'utf-8')[0]
+                except TypeError as e:
+                    pass
 
 @implementer(IGroup)
-class Group(Node):
+class Group(_Node):
 
     def __getitem__(self, key):
         for u in self.node.MEMBER_OF.incoming:
