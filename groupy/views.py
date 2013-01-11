@@ -37,7 +37,6 @@ def cypher_get(context, request):
     pass
 
 
-
 class BaseView(object):
     def __init__(self, context, request):
         self.context = context

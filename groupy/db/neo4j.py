@@ -51,7 +51,7 @@ def init(db, ld):
         indexable = ('uid', 'cn', 'sn', 'givenname', 'mail', 'displayname')
         for (dn, attrs) in _get_people(ld):
             node = db.node(username=unicode(attrs['uid'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
-            meta = { 'ldap_attrs' : [] }
+            ldap_attrs = []
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
                 if 'password' not in attr:
@@ -60,11 +60,11 @@ def init(db, ld):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
-                        meta['ldap_attrs'].append(unicode(attr), 'utf-8')
+                        ldap_attrs.append(unicode(attr), 'utf-8')
                     except TypeError as e:
                         pass
                     
-            node['meta'] = meta
+            node['meta.ldap_attrs'] = ldap_attrs
             people_idx['username'][node['uid'].lower()] = node
             people_idx['dn'][node['dn']] = node
             for i in indexable:
@@ -74,7 +74,7 @@ def init(db, ld):
 
         indexable = ('cn', 'displayname',)
         for (dn, attrs) in _get_groups(ld):
-            meta = { 'ldap_attrs' : [] }
+            ldap_attrs = []
             node = db.node(groupname=unicode(attrs['cn'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
@@ -84,18 +84,18 @@ def init(db, ld):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
-                        meta['ldap_attrs'].append(unicode(attr), 'utf-8')
+                        ldap_attrs.append(unicode(attr), 'utf-8')
                     except TypeError as e:
                         pass
 
-
+            node['meta.ldap_attrs'] = ldap_attrs
             groups_idx['groupname'][node['cn']] = node
             groups_idx['dn'][node['dn']] = node
             for i in indexable:
                 if node.get(i):
                     groups_idx[i][node[i]] = node
 
-
+            
             members = attrs.get('memberUid')
             if members:
                 for member in members:
