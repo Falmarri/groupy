@@ -14,7 +14,7 @@ def my_view(context, request):
     return {'project':'groupy'}
 
 
-@view_config(name='db-init.ok', request_method='POST', request_param='override=true', renderer='json')
+@view_config(name='db-init', request_method='POST', request_param='override=true', renderer='json')
 def init_db(context, request):
     import db.neo4j
     with request.ldap.connection() as ld:
