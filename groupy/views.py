@@ -1,5 +1,6 @@
 from pyramid.view import view_config, view_defaults
 from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import Response
 import json
 import logging
 import os
@@ -13,6 +14,12 @@ def my_view(context, request):
     return {'project':'groupy'}
 
 
+@view_config(context=models.Root, name='db-init.ok', request_method='POST', request_param='override=true', renderer='json')
+def init_db(context, request):
+    import db.neo4j
+    with request.ldap.connection() as ld:
+        db.neo4j.init(context.db, ld)
+    return Response()
 
 @view_config(name='cypher', context=models.Root, request_method='POST', renderer='json')
 def cypher_post(context, request):

@@ -25,7 +25,87 @@ class ConnectionManager(object):
            pass
             
           
+def _get_groups(ld):
+    return ld.search_s('ou=groups,dc=iplantcollaborative,dc=org', ldap.SCOPE_SUBTREE, '(cn=*)')
 
+def _get_people(ld):
+    return ld.search_s('ou=people,dc=iplantcollaborative,dc=org', ldap.SCOPE_SUBTREE, '(uid=*)')
+
+
+
+
+def init(db, ld):
+   
+    with db.transaction:
+        if not db.node.indexes.exists('groups'):
+            groups_idx = db.node.indexes.create('groups', type='exact', to_lower_case='true')
+        else:
+            groups_idx = db.node.indexes.get('groups')
+
+        if not db.node.indexes.exists('people'):
+            people_idx = db.node.indexes.create('people', type='exact', to_lower_case='true')
+        else:
+            people_idx = db.node.indexes.get('people')
+
+
+        indexable = ('uid', 'cn', 'sn', 'givenname', 'mail', 'displayname')
+        for (dn, attrs) in _get_people(ld):
+            node = db.node(username=unicode(attrs['uid'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
+            meta = { 'ldap_attrs' : [] }
+            for attr, val in attrs.iteritems():
+                attr = attr.lower()
+                if 'password' not in attr:
+                    try:
+                        if len(val) != 1:
+                            node[attr] = [unicode(v, 'utf-8') for v in val]
+                        else:
+                            node[attr] = unicode(val[0], 'utf-8')[0]
+                        meta['ldap_attrs'].append(unicode(attr), 'utf-8')
+                    except TypeError as e:
+                        pass
+                    
+            node['meta'] = meta
+            people_idx['username'][node['uid'].lower()] = node
+            people_idx['dn'][node['dn']] = node
+            for i in indexable:
+                if node.get(i):
+                    people_idx[i][node[i]] = node
+
+
+        indexable = ('cn', 'displayname',)
+        for (dn, attrs) in _get_groups(ld):
+            meta = { 'ldap_attrs' : [] }
+            node = db.node(groupname=unicode(attrs['cn'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
+            for attr, val in attrs.iteritems():
+                attr = attr.lower()
+                if attr != 'memberUid':
+                    try:
+                        if len(val) != 1:
+                            node[attr] = [unicode(v, 'utf-8') for v in val]
+                        else:
+                            node[attr] = unicode(val[0], 'utf-8')[0]
+                        meta['ldap_attrs'].append(unicode(attr), 'utf-8')
+                    except TypeError as e:
+                        pass
+
+
+            groups_idx['groupname'][node['cn']] = node
+            groups_idx['dn'][node['dn']] = node
+            for i in indexable:
+                if node.get(i):
+                    groups_idx[i][node[i]] = node
+
+
+            members = attrs.get('memberUid')
+            if members:
+                for member in members:
+                    m = people_idx['uid'][unicode(member, 'utf-8').lower()]
+                    if m.single:
+                        m.single.MEMBER_OF(node)
+                    else:
+                        unknown_user = db.node(uid=unicode(member, 'utf-8'), source='unknown')
+                        unknown_user.MEMBER_OF(node)
+                    m.close()
 
 
 @subscriber(ApplicationCreated)
