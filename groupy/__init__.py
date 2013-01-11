@@ -21,10 +21,6 @@ def user_root_factory(request):
     return models.Users(request)
 
 
-from pyramid_ldap import (
-    get_ldap_connector,
-    groupfinder,
-)
 
 from pyramid.security import (
     Allow,
