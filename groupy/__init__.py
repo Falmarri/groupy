@@ -39,6 +39,7 @@ def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
     import ldap
+    import ldapurl
     my_session_factory = session_factory_from_settings(settings)
 
     
@@ -46,33 +47,19 @@ def main(global_config, **settings):
     
     from pyramid.authentication import SessionAuthenticationPolicy
     from pyramid.authorization import ACLAuthorizationPolicy
+
+    if settings.get('groupy.ldap.user'):
+        
+        from ldappool import ConnectionManager as CM
+    else:
+        from .db.neo4j import ConnectionManager as CM
+
+    timeout = int(settings.get('groupy.ldap.timeout', -1))
+    settings['groupy.ldap.timeout'] = timeout
     
-    #config.set_authentication_policy(SessionAuthenticationPolicy(callback=groupfinder))
-    #config.set_authorization_policy(ACLAuthorizationPolicy())
-
-    #config.ldap_setup(
-        #'ldap://ldap.iplantcollaborative.org',
-    #)
-
-    #config.ldap_set_login_query(
-        #base_dn='CN=people,DC=iplantcollaborative,DC=org',
-        #filter_tmpl='(uid=%(login)s)',
-        #scope = ldap.SCOPE_ONELEVEL,
-    #)
-
-    #config.ldap_set_groups_query(
-    #base_dn='CN=people,DC=iplantcollaborative,DC=org',
-        #filter_tmpl='(&(objectCategory=group)(member=%(userdn)s))',
-        #scope = ldap.SCOPE_SUBTREE,
-        #cache_period = 600,
-    #)
-    
-
-
-    from ldappool import ConnectionManager
-    cm = ConnectionManager(settings['groupy.ldap_url'],
-                            bind=settings['groupy.ldap_user'] or None,
-                            passwd=settings['groupy.ldap_password'] or None)
+    cm = CM(ldapurl.LDAPUrl(hostport=settings.get('groupy.ldap.url'), dn=settings.get('groupy.ldap.dn')).unparse(),
+                            bind=settings.get('groupy.ldap.user'),
+                            passwd=settings.get('groupy.ldap.password'), timeout=timeout, use_pool=False)
 
     config.add_request_method((lambda r: cm), name='ldap', property=True)
     config.add_static_view('static', 'static', cache_max_age=3600)

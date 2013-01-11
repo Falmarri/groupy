@@ -81,6 +81,9 @@ class BaseMultiView(BaseView):
 class BaseSingleView(BaseView):
 
     def __call__(self):
+        import ldap
+        with self.request.ldap.connection() as ld:
+            log.debug(ld.search_s(self.context.node['dn'], ldap.SCOPE_BASE))
         return self.node_to_dict(self.context.node)
 
 
