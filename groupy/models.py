@@ -62,6 +62,7 @@ class Root(Resource,dict):
         #self.request = request
         Resource.__init__(self, request)
         dict.__init__(self)
+
         self['users'] =  Users(request)
         self['groups'] = Groups(request)
         
