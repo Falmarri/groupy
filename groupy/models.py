@@ -107,7 +107,11 @@ class Groups(Resource):
     _idxs = (_key, 'cn', 'displayname',)
     def __init__(self, request):
         Resource.__init__(self, request)
-        self.idx = self.db.node.indexes.get(self._idx_name)
+        if not self.db.node.indexes.exists(self._idx_name):
+            log.error('Could not get database index from %s. Did you set the right location in your settings file?', request.registry.settings['neo4j.location'])
+            self.idx = None
+        else:
+            self.idx = self.db.node.indexes.get(self._idx_name)
 
     def __getitem__(self, key):
         group = self.idx.query('{0}:{1}'.format(Groups._key, key.lower())).single
