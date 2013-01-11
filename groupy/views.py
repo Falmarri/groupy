@@ -14,7 +14,7 @@ def my_view(context, request):
     return {'project':'groupy'}
 
 
-@view_config(context=models.Root, name='dbinit', request_method='POST', renderer='json')
+@view_config(context=models.Root, name='dbinit', renderer='json')
 def init_db(context, request):
     import db.neo4j
     with request.ldap.connection() as ld:
@@ -34,11 +34,6 @@ def cypher_post(context, request):
 
 @view_config(name='cypher', context=models.Root, request_method='GET')
 def cypher_get(context, request):
-    pass
-
-
-
-def init_db(context, request):
     pass
 
 
