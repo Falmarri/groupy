@@ -51,7 +51,7 @@ def init(db, ld):
         indexable = ('uid', 'cn', 'sn', 'givenname', 'mail', 'displayname')
         for (dn, attrs) in _get_people(ld):
             node = db.node(username=unicode(attrs['uid'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
-            ldap_attrs = []
+            ldap_attrs = [u'dn']
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
                 if 'password' not in attr:
@@ -60,7 +60,7 @@ def init(db, ld):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
-                        ldap_attrs.append(unicode(attr), 'utf-8')
+                        ldap_attrs.append(unicode(attr, 'utf-8'))
                     except TypeError as e:
                         pass
                     
@@ -74,7 +74,7 @@ def init(db, ld):
 
         indexable = ('cn', 'displayname',)
         for (dn, attrs) in _get_groups(ld):
-            ldap_attrs = []
+            ldap_attrs = [u'dn']
             node = db.node(groupname=unicode(attrs['cn'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
@@ -84,7 +84,7 @@ def init(db, ld):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
-                        ldap_attrs.append(unicode(attr), 'utf-8')
+                        ldap_attrs.append(unicode(attr, 'utf-8'))
                     except TypeError as e:
                         pass
 
