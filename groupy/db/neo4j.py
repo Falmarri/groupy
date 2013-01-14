@@ -34,7 +34,9 @@ def _get_people(ld):
 
 
 
-def init(db, ld):
+def init(db, ld, reset=True):
+
+    db.clear()
    
     with db.transaction:
         if not db.node.indexes.exists('groups'):
@@ -51,12 +53,12 @@ def init(db, ld):
         indexable = ('uid', 'cn', 'sn', 'givenname', 'mail', 'displayname')
         for (dn, attrs) in _get_people(ld):
             node = db.node(username=unicode(attrs['uid'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
-            ldap_attrs = [u'dn']
+            ldap_attrs = ['dn']
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
                 if 'password' not in attr:
                     try:
-                        if len(val) != 1:
+                        if len(list(val)) != 1:
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
@@ -68,19 +70,22 @@ def init(db, ld):
             people_idx['username'][node['uid'].lower()] = node
             people_idx['dn'][node['dn']] = node
             for i in indexable:
-                if node.get(i):
-                    people_idx[i][node[i]] = node
+                ind = node.get(i)
+                if ind:
+                    for l in list(ind):
+                        people_idx[i][node[i]] = node
+                    
 
 
         indexable = ('cn', 'displayname',)
         for (dn, attrs) in _get_groups(ld):
-            ldap_attrs = [u'dn']
+            ldap_attrs = ['dn']
             node = db.node(groupname=unicode(attrs['cn'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
-                if attr != 'memberUid':
+                if attr != 'memberuid':
                     try:
-                        if len(val) != 1:
+                        if len(list(val)) != 1:
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
@@ -92,8 +97,10 @@ def init(db, ld):
             groups_idx['groupname'][node['cn']] = node
             groups_idx['dn'][node['dn']] = node
             for i in indexable:
-                if node.get(i):
-                    groups_idx[i][node[i]] = node
+                ind = node.get(i)
+                if ind:
+                    for l in list(ind):
+                        groups_idx[i][node[i]] = node
 
             
             members = attrs.get('memberUid')
