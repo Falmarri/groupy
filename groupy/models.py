@@ -15,9 +15,11 @@ def get_graphdb(location):
 
 
 class IUser(Interface):
-    pass
+    def save():
+        pass
 class IGroup(Interface):
-    pass
+    def save():
+        pass
 class IUsers(Interface):
     pass
 class IGroups(Interface):
@@ -96,7 +98,7 @@ class Users(Resource):
         
         user = self.idx.query('{0}:{1}'.format(Users._key, key.lower())).single
         if user:
-            return User(self.request, user, self, key.lower())
+            return Node(self.request, user, self, key.lower())
 
         raise KeyError(key)
     
@@ -116,7 +118,7 @@ class Groups(Resource):
     def __getitem__(self, key):
         group = self.idx.query('{0}:{1}'.format(Groups._key, key.lower())).single
         if group:
-            return Group(self.request, group, self, key.lower())
+            return Node(self.request, group, self, key.lower())
         logging.warning("Could not find group %s. %s", key, group)
         raise KeyError(key)
 
@@ -124,29 +126,30 @@ class Groups(Resource):
 
 class NodeFactory(object):
 
-    def __call__(self, request, node, parent=None, name=''):
+    def __call__(cls, request, node, parent=None, name=''):
+        clses = []
         if 'groupname' in node.keys():
-            pass
-
+            clses.append(Group)
+            log.debug("Group class")
         elif 'username' in node.keys():
-            pass
+            clses.append(User)
+            log.debug("User class")
+
 
         if node['source'] == 'ldap':
-            pass
+            clses.append(LdapMixin)
+            log.debug("Ldap Mixin")
         elif node['source'] == 'unknown':
             pass
+
+        t = type("_with_".join([k.__name__ for k in clses]), tuple(clses), {})(request, node, parent, name)
+        return t
             
 
 Node = NodeFactory()
 
 
 class _Node(Resource):
-
-    #def __new__(self, request, node, parent=None, name=''):
-        #if 'groupname' in node:
-            #pass
-        #elif 'username' in self.node:
-            #pass
 
 
     def create(self, *args, **kwargs):
@@ -157,38 +160,41 @@ class _Node(Resource):
         self.node = node
         self.request = request
         self.__parent__ = parent
-        self.__name = name
+        self.__name__ = name
         Resource.__init__(self, request)
 
-    def __getattr__(self, key):
-        return getattr(self.node, key)
 
     def __setitem__(self, key, value):
         self.node[key] = value
 
 @implementer(IUser)
 class User(_Node):
-    pass
+    def save(self):
+        pass
 
 
 @implementer(IUser)
-class LdapNode(_Node):
+class LdapMixin(object):
     from ldap import modlist
     import ldap
+
+
+    def save(self):
+        self.push()
  
     def push(self):
 
-        with self.cm as conn:
+        with self.request.cm.connection() as conn:
             current_ldap = conn.search_s(self['dn'], ldap.SCOPE_BASE)
             if current_ldap and len(current_ldap) == 1:
                 current_ldap = current_ldap[0][1]
             else:
                 raise Exception('Error looking up user in ldap')
-            mods = modlist.modifyModlist(current_ldap, dict((k, list(v)) for k,v in self.items()), ['groupname', 'username', 'dn', 'uid'])
+            mods = modlist.modifyModlist(current_ldap, dict((l, list(self.node[l])) for l in self.node['meta.ldap_attributes']), ['dn', 'uid'])
             conn.modify_s(self['dn'], mods)
 
     def pull(self):
-        with self.cm as conn:
+        with self.request.cm.connection() as conn:
             current_ldap = conn.search_s(self['dn'], ldap.SCOPE_BASE)
             if current_ldap and len(current_ldap) == 1:
                 current_ldap = current_ldap[0][1]
@@ -206,11 +212,14 @@ class LdapNode(_Node):
 
 @implementer(IGroup)
 class Group(_Node):
+    def save(self):
+        pass
 
+    
     def __getitem__(self, key):
         for u in self.node.MEMBER_OF.incoming:
             if u.start['username'] == key.lower():
-                return User(self.request, u.start, self, key.lower())
+                return Node(self.request, u.start, self, key.lower())
         else:
             raise KeyError(key)
 

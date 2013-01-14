@@ -14,7 +14,7 @@ def my_view(context, request):
     return {'project':'groupy'}
 
 
-@view_config(context=models.Root, name='dbinit', renderer='json')
+@view_config(context=models.Root, name='dbinit', request_method='POST', renderer='json')
 def init_db(context, request):
     import db.neo4j
     with request.ldap.connection() as ld:
@@ -51,7 +51,7 @@ class BaseView(object):
                 k[f.lower()] = node[f.lower()]
             return k
         else:
-            return dict(node.items())
+            return dict(((k, v) for k, v in node.items() if not k.startswith('meta.')))
      
 
 class BaseMultiView(BaseView):
@@ -83,20 +83,21 @@ class BaseMultiView(BaseView):
 class BaseSingleView(BaseView):
 
     def __call__(self):
-        import ldap
-        with self.request.ldap.connection() as ld:
-            log.debug(ld.search_s(self.context.node['dn'], ldap.SCOPE_BASE))
+
         return self.node_to_dict(self.context.node)
 
 
     def update(self):
         content = self.request.json_body
         if 'dn' in content and content['dn'] != self.context.node['dn']:
-            raise Exception("Cannot update ldap DN")
+            raise Exception("Cannot update ldap DN! You should create a new entity instead")
         with self.context.db.transaction as tx:
             for k, v in content.items():
                 self.context[k] = v
-
+        try:
+            self.context.save()
+        except Exception as e:
+            log.exception("Exception saving context", e)
         return self.node_to_dict(self.context)
     
     def join_group(self):
