@@ -2,6 +2,8 @@ from zope.interface import implementer
 from zope.interface import Interface
 import logging
 import os
+from ldap import modlist
+import ldap
 
 log = logging.getLogger(__name__)
 
@@ -175,8 +177,7 @@ class User(_Node):
 
 @implementer(IUser)
 class LdapMixin(object):
-    from ldap import modlist
-    import ldap
+
 
 
     def save(self):

@@ -62,7 +62,7 @@ def init(db, ld, reset=True):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
-                        ldap_attrs.append(unicode(attr, 'utf-8'))
+                        ldap_attrs.append(attr)
                     except TypeError as e:
                         pass
                     
@@ -89,7 +89,7 @@ def init(db, ld, reset=True):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
                             node[attr] = unicode(val[0], 'utf-8')[0]
-                        ldap_attrs.append(unicode(attr, 'utf-8'))
+                        ldap_attrs.append(attr)
                     except TypeError as e:
                         pass
 
