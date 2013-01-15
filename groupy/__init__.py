@@ -58,7 +58,7 @@ def main(global_config, **settings):
                             passwd=settings.get('groupy.ldap.password'), timeout=timeout, use_pool=False)
 
     config.add_request_method((lambda r: cm), name='ldap', property=True)
-    config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_static_view('static', 'static', cache_max_age=3600, factory=dict)
     
     #config.add_route('user_search', '/users/search' )
     #config.add_route('users', '/users/*traverse', factory=user_root_factory)

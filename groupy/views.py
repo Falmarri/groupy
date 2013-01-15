@@ -97,7 +97,7 @@ class BaseSingleView(BaseView):
         try:
             self.context.save()
         except Exception as e:
-            log.exception("Exception saving context. The underlying source (eg ldap) may not have been updated for this entity.", e)
+            log.exception("Exception saving context. The underlying source (eg ldap) may not have been updated for this entity.")
         return self.node_to_dict(self.context.node)
     
     def join_group(self):

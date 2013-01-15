@@ -5,6 +5,8 @@ import os
 from ldap import modlist
 import ldap
 
+
+
 log = logging.getLogger(__name__)
 
 def get_graphdb(location):
@@ -139,12 +141,14 @@ class NodeFactory(object):
 
 
         if node['source'] == 'ldap':
-            clses.append(LdapMixin)
+            clses.insert(0,LdapMixin)
             log.debug("Ldap Mixin")
         elif node['source'] == 'unknown':
             pass
 
         t = type("_with_".join([k.__name__ for k in clses]), tuple(clses), {})(request, node, parent, name)
+	import ipdb
+	#ipdb.set_trace()
         return t
             
 
@@ -178,25 +182,26 @@ class User(_Node):
 @implementer(IUser)
 class LdapMixin(object):
 
-
-
     def save(self):
+	log.debug("Saving ldap group")
         self.push()
  
     def push(self):
-
-        with self.request.cm.connection() as conn:
-            current_ldap = conn.search_s(self['dn'], ldap.SCOPE_BASE)
+        log.debug("Pushing to ldap")
+        with self.request.ldap.connection() as conn:
+            current_ldap = conn.search_s(self.node['dn'], ldap.SCOPE_BASE)
             if current_ldap and len(current_ldap) == 1:
                 current_ldap = current_ldap[0][1]
+	        log.debug("Current ldap for ldap search %s: %s", self.node['dn'], current_ldap)
             else:
                 raise Exception('Error looking up user in ldap')
-            mods = modlist.modifyModlist(current_ldap, dict((l, list(self.node[l])) for l in self.node['meta.ldap_attributes']), ['dn', 'uid'])
-            conn.modify_s(self['dn'], mods)
+	    mods = modlist.modifyModlist(current_ldap, dict((l, [self.node[l].encode('utf-8', 'ignore')] if  isinstance(self.node[l], basestring) else [e.encode('utf-8', 'ignore') for e in self.node[l]] ) for l in self.node['meta.ldap_attrs']), ['dn', 'uid'], 1)
+	    #log.debug("Ldap modification list: %s", mods)
+	    conn.modify_s(self.node['dn'], mods)
 
     def pull(self):
-        with self.request.cm.connection() as conn:
-            current_ldap = conn.search_s(self['dn'], ldap.SCOPE_BASE)
+        with self.request.ldap.connection() as conn:
+            current_ldap = conn.search_s(self.node['dn'], ldap.SCOPE_BASE)
             if current_ldap and len(current_ldap) == 1:
                 current_ldap = current_ldap[0][1]
             else:
@@ -205,9 +210,9 @@ class LdapMixin(object):
             for attr, val in current_ldap.items():
                 try:
                     if len(val) != 1:
-                        self[attr] = [unicode(v, 'utf-8') for v in val]
+                        self.node[attr] = [unicode(v, 'utf-8') for v in val]
                     else:
-                        self[attr] = unicode(val[0], 'utf-8')[0]
+                        self.node[attr] = unicode(val[0], 'utf-8')[0]
                 except TypeError as e:
                     pass
 
