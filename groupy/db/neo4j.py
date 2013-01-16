@@ -57,9 +57,12 @@ def init(db, ld, reset=True):
                 if 'password' not in attr and 'shadow' not in attr:
                     try:
                         if not isinstance(val, basestring):
-                            node[attr] = [unicode(v, 'utf-8') for v in val]
+                            if len(val) == 1:
+                                node[attr] = unicode(val[0], 'utf-8')
+                            else:
+                                node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
-                            node[attr] = unicode(val, 'utf-8')[0]
+                            node[attr] = unicode(val, 'utf-8')
                         ldap_attrs.append(attr)
                     except TypeError as e:
                         pass
@@ -87,9 +90,12 @@ def init(db, ld, reset=True):
                 if attr != 'memberuid':
                     try:
                         if not isinstance(val, basestring):
-                            node[attr] = [unicode(v, 'utf-8') for v in val]
+                            if len(val) == 1:
+                                node[attr] = unicode(val[0], 'utf-8')
+                            else:
+                                node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
-                            node[attr] = unicode(val, 'utf-8')[0]
+                            node[attr] = unicode(val, 'utf-8')
                         ldap_attrs.append(attr)
                     except TypeError as e:
                         pass
