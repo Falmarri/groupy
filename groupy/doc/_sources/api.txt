@@ -206,4 +206,12 @@ API
     Returns the user object if that user is a member of this group.
     This URI is functionally equivalent to :http:get:`/users/{username}`
     Therefore this is valid :http:get:`/groups/{groupname}/{username}/groups`
-    
+   
+
+.. http:post:: /cypher
+
+    Allows full cypher access into the underlying data. Please don't use this yet as it has full read/write access to the entire database
+
+.. http:post:: /dbinit
+
+    Initializes the database. THIS IS DESTRUCTIVE. It will clear ALL data in the current database and recreate it from ldap data

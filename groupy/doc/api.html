@@ -277,6 +277,18 @@ This URI is functionally equivalent to <a class="reference internal" href="#get-
 Therefore this is valid <tt class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/groups/{groupname}/{username}/groups</span></tt></p>
 </dd></dl>
 
+<dl class="post">
+<dt id="post--cypher">
+<tt class="descname">POST </tt><tt class="descname">/cypher</tt><a class="headerlink" href="#post--cypher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows full cypher access into the underlying data. Please don&#8217;t use this yet as it has full read/write access to the entire database</p>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--dbinit">
+<tt class="descname">POST </tt><tt class="descname">/dbinit</tt><a class="headerlink" href="#post--dbinit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the database. THIS IS DESTRUCTIVE. It will clear ALL data in the current database and recreate it from ldap data</p>
+</dd></dl>
+
 </div>
 
 
