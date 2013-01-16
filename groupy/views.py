@@ -115,7 +115,7 @@ class UserView(BaseSingleView):
 
     @view_config(name='groups')
     def groups(self):
-        return sorted([(ret.end['groupname'], dict(ret.items())) for ret in self.context.MEMBER_OF.outgoing])
+        return sorted([(ret.end['groupname'], dict(ret.items())) for ret in self.context.node.MEMBER_OF.outgoing])
 
 
 
@@ -127,7 +127,7 @@ class GroupView(BaseSingleView):
 
     @view_config(name='members')
     def members(self):
-        return sorted([(ret.start['username'], dict(ret.items())) for ret in self.context.MEMBER_OF.incoming])
+        return sorted([(ret.start['username'], dict(ret.items())) for ret in self.context.node.MEMBER_OF.incoming])
 
     def remove_user(self):
         pass

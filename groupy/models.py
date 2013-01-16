@@ -169,7 +169,6 @@ class _Node(Resource):
         self.__name__ = name
         Resource.__init__(self, request)
 
-
     def __setitem__(self, key, value):
         self.node[key] = value
 

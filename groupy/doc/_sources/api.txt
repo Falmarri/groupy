@@ -1,8 +1,3 @@
-http://packages.python.org/sphinxcontrib-httpdomain/#roles
-
-========
-Groupy
-========
 
 API
 ---
@@ -92,22 +87,27 @@ API
             }
         ]
 
-        :query search: Supports full `lucene <http://lucene.apache.org/core/3_6_2/queryparsersyntax.html>`_ search syntax (not 100% tested)
-        :query filter: Filters object fields from search results. Comma separated list
+    :query search: Supports full `lucene <http://lucene.apache.org/core/3_6_2/queryparsersyntax.html>`_ search syntax (not 100% tested)
+    :query filter: Filters object fields from search results. Comma separated list
+
+
 
     **Multiple Field Search**:
 
     .. sourcecode:: http
+
         GET /users?search=(dknap* or lenards) HTTP/1.1
 
     **Fuzzy search**:
-        
+
     .. sourcecode:: http
+
         GET /users?search=uid:dknapp~0.8 HTTP/1.1
 
     **Search and Filter**:
-    
+
     .. sourcecode:: http
+
         GET /users?search=uid:dknapp&filter=dn,cn,title HTTP/1.1
 
 .. http:get:: /users/{username}

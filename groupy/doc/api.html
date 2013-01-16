@@ -1,0 +1,328 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API &mdash; groupy 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="groupy 0.1 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to groupy’s documentation!" href="index.html" />
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head>
+  <body>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to groupy’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">groupy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<dl class="get">
+<dt id="get--users">
+<tt class="descname">GET </tt><tt class="descname">/users</tt><a class="headerlink" href="#get--users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of all the users in the system. Note: this can take some time depending on the amount of results
+returned.</p>
+<p><strong>Example request</strong>:</p>
+<div class="highlight-http"><div class="highlight"><pre><span class="nf">GET</span> <span class="nn">/users</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">example.com</span>
+</pre></div>
+</div>
+<p><strong>Example response</strong>:</p>
+<div class="highlight-http"><div class="highlight"><pre><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json; charset=UTF-8</span>
+
+<span class="p">[</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="s2">&quot;dknapp&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="s2">&quot;David Knapp&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;uid&quot;</span><span class="p">:</span><span class="s2">&quot;dknapp&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowinactive&quot;</span><span class="p">:</span><span class="s2">&quot;10&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;homedirectory&quot;</span><span class="p">:</span><span class="s2">&quot;/home/dknapp&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowwarning&quot;</span><span class="p">:</span><span class="s2">&quot;10&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowmin&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="s2">&quot;Software Engineer&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;loginshell&quot;</span><span class="p">:</span><span class="s2">&quot;/bin/bash&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;uidnumber&quot;</span><span class="p">:</span><span class="s2">&quot;12942&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowmax&quot;</span><span class="p">:</span><span class="s2">&quot;730&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="s2">&quot;ldap&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;test.extra_field&quot;</span><span class="p">:</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;dn&quot;</span><span class="p">:</span><span class="s2">&quot;uid=dknapp,ou=People,dc=iplantcollaborative,dc=org&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;mail&quot;</span><span class="p">:</span><span class="s2">&quot;davidcknapp@gmail.com&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;givenname&quot;</span><span class="p">:</span><span class="s2">&quot;David&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowlastchange&quot;</span><span class="p">:</span><span class="s2">&quot;15460&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;departmentnumber&quot;</span><span class="p">:</span><span class="s2">&quot;Omg Development 5&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;objectclass&quot;</span><span class="p">:[</span>
+        <span class="s2">&quot;shadowAccount&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;posixAccount&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;inetOrgPerson&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;o&quot;</span><span class="p">:</span><span class="s2">&quot;Ephibian&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;gidnumber&quot;</span><span class="p">:</span><span class="s2">&quot;10013&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sn&quot;</span><span class="p">:</span><span class="s2">&quot;Knapp&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="s2">&quot;lenards&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;cn&quot;</span><span class="p">:</span><span class="s2">&quot;Andrew Lenards&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;uid&quot;</span><span class="p">:</span><span class="s2">&quot;lenards&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowinactive&quot;</span><span class="p">:</span><span class="s2">&quot;10&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sambasid&quot;</span><span class="p">:</span><span class="s2">&quot;S-1-5-21-7623811015-3361044348-030300820-21042&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;homedirectory&quot;</span><span class="p">:</span><span class="s2">&quot;/home/lenards&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowmax&quot;</span><span class="p">:</span><span class="s2">&quot;730&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowwarning&quot;</span><span class="p">:</span><span class="s2">&quot;10&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowmin&quot;</span><span class="p">:</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="s2">&quot;University staff&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;loginshell&quot;</span><span class="p">:</span><span class="s2">&quot;/bin/bash&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;uidnumber&quot;</span><span class="p">:</span><span class="s2">&quot;10021&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sambaprimarygroupsid&quot;</span><span class="p">:</span><span class="s2">&quot;S-1-5-21-7623811015-3361044348-030300820-21001&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="s2">&quot;ldap&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;mail&quot;</span><span class="p">:</span><span class="s2">&quot;lenards@email.arizona.edu&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sambapwdlastset&quot;</span><span class="p">:</span><span class="s2">&quot;1236616914&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;dn&quot;</span><span class="p">:</span><span class="s2">&quot;uid=lenards,ou=People,dc=iplantcollaborative,dc=org&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;displayname&quot;</span><span class="p">:</span><span class="s2">&quot;Andrew Lenards&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sambadomainname&quot;</span><span class="p">:</span><span class="s2">&quot;junk&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sambaacctflags&quot;</span><span class="p">:</span><span class="s2">&quot;[XU         ]&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;givenname&quot;</span><span class="p">:</span><span class="s2">&quot;Andrew&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;shadowlastchange&quot;</span><span class="p">:</span><span class="s2">&quot;15491&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;departmentnumber&quot;</span><span class="p">:</span><span class="s2">&quot;BIO5 Institute&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;objectclass&quot;</span><span class="p">:[</span>
+        <span class="s2">&quot;sambaSamAccount&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;shadowAccount&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;posixAccount&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;inetOrgPerson&quot;</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;sambahomedrive&quot;</span><span class="p">:</span><span class="s2">&quot;U:&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;o&quot;</span><span class="p">:</span><span class="s2">&quot;University of Arizona&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;gidnumber&quot;</span><span class="p">:</span><span class="s2">&quot;10013&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;sn&quot;</span><span class="p">:</span><span class="s2">&quot;Lenards&quot;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Query Parameters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
+<li><strong>search</strong> &#8211; Supports full <a class="reference external" href="http://lucene.apache.org/core/3_6_2/queryparsersyntax.html">lucene</a> search syntax (not 100% tested)</li>
+<li><strong>filter</strong> &#8211; Filters object fields from search results. Comma separated list</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Multiple Field Search</strong>:</p>
+<div class="highlight-http"><pre>GET /users?search=(dknap* or lenards) HTTP/1.1</pre>
+</div>
+<p><strong>Fuzzy search</strong>:</p>
+<div class="highlight-http"><div class="highlight"><pre><span class="nf">GET</span> <span class="nn">/users?search=uid:dknapp~0.8</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</pre></div>
+</div>
+<p><strong>Search and Filter</strong>:</p>
+<div class="highlight-http"><div class="highlight"><pre><span class="nf">GET</span> <span class="nn">/users?search=uid:dknapp&amp;filter=dn,cn,title</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--users-{username}">
+<tt class="descname">GET </tt><tt class="descname">/users/{username}</tt><a class="headerlink" href="#get--users-{username}" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the user information of the user if it exists</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Query Parameters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><ul class="first last simple">
+<li><strong>filter</strong> &#8211; Filters object fields from search results. Comma separated list</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--users-{username}-groups">
+<tt class="descname">GET </tt><tt class="descname">/users/{username}/groups</tt><a class="headerlink" href="#get--users-{username}-groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>The membership information of all the groups this user belongs to. The return value is a tuple (groupname, relationship_attributes).
+This format can be discussed and changed if needed.</p>
+<p><strong>Example request</strong>:</p>
+<div class="highlight-http"><div class="highlight"><pre><span class="nf">GET</span> <span class="nn">/users/dknapp/groups</span> <span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="o">:</span> <span class="l">example.com</span>
+</pre></div>
+</div>
+<p><strong>Example response</strong>:</p>
+<div class="highlight-http"><div class="highlight"><pre><span class="kr">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK</span>
+<span class="na">Content-Type</span><span class="o">:</span> <span class="l">application/json; charset=UTF-8</span>
+
+<span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;atmo-user&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;community&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;core-services&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;de-preview-access&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;myplant-users&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;staff&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;support&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;uofa&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--groups">
+<tt class="descname">GET </tt><tt class="descname">/groups</tt><a class="headerlink" href="#get--groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#get--users" title="GET /users"><tt class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/users</span></tt></a></p>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--groups-{groupname}">
+<tt class="descname">GET </tt><tt class="descname">/groups/{groupname}</tt><a class="headerlink" href="#get--groups-{groupname}" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the group object. See <a class="reference internal" href="#get--users-{username}" title="GET /users/{username}"><tt class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/users/{username}</span></tt></a></p>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--groups-{groupname}-members">
+<tt class="descname">GET </tt><tt class="descname">/groups/{groupname}/members</tt><a class="headerlink" href="#get--groups-{groupname}-members" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#get--users-{username}-groups" title="GET /users/{username}/groups"><tt class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/users/{username}/groups</span></tt></a></p>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--groups-{groupname}-{username}">
+<tt class="descname">GET </tt><tt class="descname">/groups/{groupname}/{username}</tt><a class="headerlink" href="#get--groups-{groupname}-{username}" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the user object if that user is a member of this group.
+This URI is functionally equivalent to <a class="reference internal" href="#get--users-{username}" title="GET /users/{username}"><tt class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/users/{username}</span></tt></a>
+Therefore this is valid <tt class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/groups/{groupname}/{username}/groups</span></tt></p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to groupy&#8217;s documentation!</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to groupy’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">groupy 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Falmarri, iPlantCollaborative.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
