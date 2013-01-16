@@ -36,8 +36,6 @@ def _get_people(ld):
 
 def init(db, ld, reset=True):
 
-    db.clear()
-   
     with db.transaction:
         if not db.node.indexes.exists('groups'):
             groups_idx = db.node.indexes.create('groups', type='exact', to_lower_case='true')
@@ -50,18 +48,18 @@ def init(db, ld, reset=True):
             people_idx = db.node.indexes.get('people')
 
 
-        indexable = ('uid', 'cn', 'sn', 'givenname', 'mail', 'displayname')
+        indexable = ('uid', 'cn', 'sn', 'givenname', 'mail', 'displayname', 'title')
         for (dn, attrs) in _get_people(ld):
             node = db.node(username=unicode(attrs['uid'][0], 'utf-8'), source="ldap", dn=unicode(dn, 'utf-8'))
             ldap_attrs = ['dn']
             for attr, val in attrs.iteritems():
                 attr = attr.lower()
-                if 'password' not in attr:
+                if 'password' not in attr and 'shadow' not in attr:
                     try:
-                        if len(list(val)) != 1:
+                        if not isinstance(val, basestring):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
-                            node[attr] = unicode(val[0], 'utf-8')[0]
+                            node[attr] = unicode(val, 'utf-8')
                         ldap_attrs.append(attr)
                     except TypeError as e:
                         pass
@@ -72,8 +70,11 @@ def init(db, ld, reset=True):
             for i in indexable:
                 ind = node.get(i)
                 if ind:
-                    for l in list(ind):
-                        people_idx[i][node[i]] = node
+                    if isinstance(ind, basestring):
+                        people_idx[i][ind] = node
+                    else:
+                        for l in ind:
+                            people_idx[i][l] = node
                     
 
 
@@ -85,10 +86,10 @@ def init(db, ld, reset=True):
                 attr = attr.lower()
                 if attr != 'memberuid':
                     try:
-                        if len(list(val)) != 1:
+                        if not isinstance(val, basestring):
                             node[attr] = [unicode(v, 'utf-8') for v in val]
                         else:
-                            node[attr] = unicode(val[0], 'utf-8')[0]
+                            node[attr] = unicode(val, 'utf-8')
                         ldap_attrs.append(attr)
                     except TypeError as e:
                         pass
@@ -99,8 +100,11 @@ def init(db, ld, reset=True):
             for i in indexable:
                 ind = node.get(i)
                 if ind:
-                    for l in list(ind):
-                        groups_idx[i][node[i]] = node
+                    if isinstance(ind, basestring):
+                        groups_idx[i][ind] = node
+                    else:
+                        for l in ind:
+                            groups_idx[i][l] = node
 
             
             members = attrs.get('memberUid')
