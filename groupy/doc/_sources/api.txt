@@ -20,8 +20,9 @@ API
 
         HTTP/1.1 200 OK
         Content-Type: application/json; charset=UTF-8
-
-        [
+        
+        {
+        "data" : [
             {
                 "username":"dknapp",
                 "cn":"David Knapp",
@@ -86,6 +87,7 @@ API
                 "sn":"Lenards"
             }
         ]
+        }
 
     :query search: Supports full `lucene <http://lucene.apache.org/core/3_6_2/queryparsersyntax.html>`_ search syntax (not 100% tested)
     :query filter: Filters object fields from search results. Comma separated list
@@ -136,57 +138,42 @@ API
         HTTP/1.1 200 OK
         Content-Type: application/json; charset=UTF-8
 
-        [
-            [
-                "atmo-user",
-                {
-
-                }
-            ],
-            [
-                "community",
-                {
-
-                }
-            ],
-            [
-                "core-services",
-                {
-
-                }
-            ],
-            [
-                "de-preview-access",
-                {
-
-                }
-            ],
-            [
-                "myplant-users",
-                {
-
-                }
-            ],
-            [
-                "staff",
-                {
-
-                }
-            ],
-            [
-                "support",
-                {
-
-                }
-            ],
-            [
-                "uofa",
-                {
-
-                }
-            ]
+        {
+        "data":[
+            {
+            "attributes":{ },
+            "name":"atmo-user"
+            },
+            {
+            "attributes":{ },
+            "name":"community"
+            },
+            {
+            "attributes":{ },
+            "name":"core-services"
+            },
+            {
+            "attributes":{ },
+            "name":"de-preview-access"
+            },
+            {
+            "attributes":{ },
+            "name":"myplant-users"
+            },
+            {
+            "attributes":{ },
+            "name":"staff"
+            },
+            {
+            "attributes":{ },
+            "name":"support"
+            },
+            {
+            "attributes":{ },
+            "name":"uofa"
+            }
         ]
-
+        }
 
 .. http:get:: /groups
 

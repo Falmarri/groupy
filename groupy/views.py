@@ -48,10 +48,11 @@ class BaseView(object):
         if self.filter:
             k = {}
             for f in self.filter:
-                k[f.lower()] = node[f.lower()]
+                if f in node.keys():
+                    k[f.lower()] = node[f.lower()]
             return k
         else:
-            return dict(((k, v) for k, v in node.items() if not k.startswith('meta.')))
+            return dict(((k, v) for k, v in sorted(node.items()) if not k.startswith('meta.')))
      
 
 class BaseMultiView(BaseView):
@@ -75,7 +76,7 @@ class BaseMultiView(BaseView):
         
         hits = self.context.db.query(BaseMultiView.fastQuery.substitute(idx=self.context._idx_name), k=self._query)['n']
 
-        return sorted([self.node_to_dict(ret) for ret in hits])
+        return {'data': sorted([self.node_to_dict(ret) for ret in hits])}
     
     def create(self):
         pass
@@ -108,6 +109,8 @@ class BaseSingleView(BaseView):
         ''' In subclass so groups can be subgroups'''
         pass
 
+
+
 @view_defaults(context=models.User, renderer='json')
 @view_config(request_method='GET')
 @view_config(request_method=('POST', 'PUT'), attr='update')
@@ -115,7 +118,7 @@ class UserView(BaseSingleView):
 
     @view_config(name='groups')
     def groups(self):
-        return sorted([(ret.end['groupname'], dict(ret.items())) for ret in self.context.node.MEMBER_OF.outgoing])
+        return {'data' : sorted([dict((('name', ret.end['groupname']), ('attributes', dict(ret.items())))) for ret in self.context.node.MEMBER_OF.outgoing], key=lambda k: k['name'])}
 
 
 
@@ -127,7 +130,7 @@ class GroupView(BaseSingleView):
 
     @view_config(name='members')
     def members(self):
-        return sorted([(ret.start['username'], dict(ret.items())) for ret in self.context.node.MEMBER_OF.incoming])
+        return { 'data': sorted([dict((('name', ret.start['username']), ('attributes', dict(ret.items())))) for ret in self.context.node.MEMBER_OF.incoming], key=lambda k: k['name'])}
 
     def remove_user(self):
         pass
@@ -140,6 +143,7 @@ class UsersView(BaseMultiView):
 
 
 @view_defaults(context=models.Groups, renderer='json')
+@view_config(request_method='GET', renderer='templates/groups.mustache', name='view' )
 @view_config(request_method='GET')
 @view_config(request_method='POST', attr='create')
 class GroupsView(BaseMultiView):

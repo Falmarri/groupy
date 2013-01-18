@@ -1,11 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html >
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" xmlns:tal="http://xml.zope.org/namespaces/tal">
 <head>
   <title>The Pyramid Web Application Development Framework</title>
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
   <meta name="keywords" content="python web application" />
   <meta name="description" content="pyramid web application" />
-  <link rel="shortcut icon" href="${request.static_url('groupy:static/favicon.ico')}" />
   <link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables.css">
   <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
   <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.js"></script>
@@ -20,14 +19,9 @@
 
     <thead>
         <tr>
-            <th tal:condition="view.filter" tal:repeat="f view.filter" tal:attributes="class f" tal:content="f" />
-            <div tal:omit-tag="" tal:condition="not:view.filter">
-                <th class="dn">dn</th>
-                <th class="cn">groupname (cn)</th>
-                <th class="displayname">displayname</th>
-                <th class="description">description</th>
-    
-            </div>
+            {{#view.filter}}
+                <th class="{{.}}">{{.}}</th>
+            {{/view.filter}}
             <th class="members">Members</th>
         </tr>
     <tbody>
@@ -48,8 +42,7 @@
 
         ],
         "bProcessing": true,
-        "sAjaxSource" : '/groups',
-        "sAjaxDataProp" : 'data'
+        "aaData": #{{data}}
     });
 
 </script>

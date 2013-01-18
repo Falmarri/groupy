@@ -44,6 +44,8 @@ def main(global_config, **settings):
     from pyramid.authentication import SessionAuthenticationPolicy
     from pyramid.authorization import ACLAuthorizationPolicy
 
+    config.add_renderer(name=".mustache", factory="groupy.render.MustacheRendererFactory")
+
     if settings.get('groupy.ldap.user'):
         
         from ldappool import ConnectionManager as CM
