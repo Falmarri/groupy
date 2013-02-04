@@ -16,9 +16,16 @@ def my_view(context, request):
 
 @view_config(context=models.Root, name='dbinit', request_method='POST', renderer='json')
 def init_db(context, request):
-    import db.neo4j
+    import db.neo
     with request.ldap.connection() as ld:
-        db.neo4j.init(context.db, ld)
+        ret = db.neo.init(context.db, ld, request.registry.settings)
+    return ret
+
+@view_config(context=models.Root, name='dbsync', request_method='POST', renderer='json')
+def sync_db(context, request):
+    import db.neo
+    with request.ldap.connection() as ld:
+        db.neo4j.sync(context.db, ld, request.registry.settings)
     return Response()
 
 @view_config(name='cypher', context=models.Root, request_method='POST', renderer='json')
@@ -58,7 +65,7 @@ class BaseView(object):
 class BaseMultiView(BaseView):
     from profilehooks import profile
     from string import Template
-    fastQuery = Template("""start n = node:${idx}({k}) return n""")
+    #fastQuery = Template("""start n = node:${idx}({k}) return n""")
     
     def __init__(self, context, request):
         BaseView.__init__(self, context, request)
@@ -74,7 +81,7 @@ class BaseMultiView(BaseView):
     #@profile(filename='multi.prof', immediate=True)
     def __call__(self):
         
-        hits = self.context.db.query(BaseMultiView.fastQuery.substitute(idx=self.context._idx_name), k=self._query)['n']
+        hits = self.context.idx.query(self._query)
 
         return {'data': sorted([self.node_to_dict(ret) for ret in hits])}
     
@@ -118,7 +125,7 @@ class UserView(BaseSingleView):
 
     @view_config(name='groups')
     def groups(self):
-        return {'data' : sorted([dict((('name', ret.end['groupname']), ('attributes', dict(ret.items())))) for ret in self.context.node.MEMBER_OF.outgoing], key=lambda k: k['name'])}
+        return {'data' : sorted([dict((('name', ret.end.get('groupname')), ('attributes', dict(ret.items())))) for ret in self.context.node.MEMBER_OF.outgoing], key=lambda k: k['name'])}
 
 
 
@@ -130,7 +137,9 @@ class GroupView(BaseSingleView):
 
     @view_config(name='members')
     def members(self):
-        return { 'data': sorted([dict((('name', ret.start['username']), ('attributes', dict(ret.items())))) for ret in self.context.node.MEMBER_OF.incoming], key=lambda k: k['name'])}
+        import ipdb
+        ipdb.set_trace()
+        return { 'data': sorted([dict((('name', ret.start.get('username')), ('attributes', dict(ret.items())))) for ret in self.context.node.MEMBER_OF.incoming], key=lambda k: k['name'])}
 
     def remove_user(self):
         pass

@@ -1,5 +1,6 @@
 from pyramid.config import Configurator
 from pyramid.renderers import JSON
+from pyramid.settings import aslist
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid_beaker import session_factory_from_settings
 import models
@@ -38,6 +39,10 @@ def main(global_config, **settings):
     import ldapurl
     my_session_factory = session_factory_from_settings(settings)
 
+
+    settings['groupy.ldap.attrs'] = aslist(settings.get('groupy.ldap.attrs'))
+    settings['neo4j.index.groups.keys'] = aslist(settings.get('neo4j.index.groups.keys'))
+    settings['neo4j.index.people.keys'] = aslist(settings.get('neo4j.index.people.keys'))
     
     config = Configurator(settings=settings, root_factory=models.Root, session_factory=my_session_factory)
     
@@ -50,9 +55,9 @@ def main(global_config, **settings):
         
         from ldappool import ConnectionManager as CM
     else:
-        from .db.neo4j import ConnectionManager as CM
+        from .db.neo import ConnectionManager as CM
 
-    timeout = int(settings.get('groupy.ldap.timeout', -1))
+    timeout = int(settings.get('groupy.ldap.timeout', 0))
     settings['groupy.ldap.timeout'] = timeout
     
     cm = CM(ldapurl.LDAPUrl(hostport=settings.get('groupy.ldap.url'), dn=settings.get('groupy.ldap.dn')).unparse(),

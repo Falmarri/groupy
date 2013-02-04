@@ -37,23 +37,8 @@ class Resource(object):
     _db = None
     def __init__(self, request):
         # NOT THREAD SAFE. IF RUNNING ON PYPY SHOULD PROBABLY CEHCK NEO4J
-        if Resource._db is None:
-            import os
-            if not os.environ.get('NEO4J_PYTHON_JVMARGS') and request.registry.settings.get('neo4j.jvmargs'):
-                os.environ['NEO4J_PYTHON_JVMARGS'] = request.registry.settings.get('neo4j.jvmargs')
-
-            if not os.environ.get('JAVA_HOME') and request.registry.settings.get('neo4j.java_home'):
-                os.environ['JAVA_HOME'] = request.registry.settings.get('neo4j.java_home')
-
-            if request.registry.settings.get('neo4j.properties'):
-                import jprops
-                with open(request.registry.settings.get('neo4j.properties')) as fp:
-                    conf = jprops.load_properties(fp)
-            
-                
-            Resource._db = get_graphdb(request.registry.settings['neo4j.location'])
-        self.db = Resource._db
         self.request = request
+        self.db = self.request.registry.db
 
 
 
@@ -83,7 +68,7 @@ class Users(Resource):
     def __init__(self, request):
         Resource.__init__(self, request)
         if not self.db.node.indexes.exists(self._idx_name):
-            log.error('Could not get database index from %s. Did you set the right location in your settings file?', request.registry.settings['neo4j.location'])
+            log.warning('Could not get database index %s from %s. Did you set the right location in your settings file?', self._idx_name, request.registry.settings['neo4j.location'])
             self.idx = None
         else:
             self.idx = self.db.node.indexes.get(self._idx_name)
@@ -114,7 +99,7 @@ class Groups(Resource):
     def __init__(self, request):
         Resource.__init__(self, request)
         if not self.db.node.indexes.exists(self._idx_name):
-            log.error('Could not get database index from %s. Did you set the right location in your settings file?', request.registry.settings['neo4j.location'])
+            log.warning('Could not get database index %s from %s. Did you set the right location in your settings file?', self._idx_name, request.registry.settings['neo4j.location'])
             self.idx = None
         else:
             self.idx = self.db.node.indexes.get(self._idx_name)
